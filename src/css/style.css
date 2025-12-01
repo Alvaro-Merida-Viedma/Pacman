@@ -1,0 +1,22 @@
+*{
+    margin: 0;
+    padding: 0;
+}
+
+body{
+    display: flex;
+    justify-content: left;
+    align-items: center;
+    margin-top: 150px;
+    margin-left: 50px;
+}
+
+#screen{
+    background-color: black;
+}
+
+div{
+    background-color: black;
+    width: 25px;
+    height: 25px;
+}
