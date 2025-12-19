@@ -1,11 +1,14 @@
+//TODO GHOST_MOVES
+
 const tileSize = 20;
 let ctx;
+let cherryCount = 0;
 
 let map;
 let pacman = {
     x: 0,
     y: 0,
-    dir: 'up'
+    dir: 'left'
 };
 
 let ghosts = [];
@@ -13,6 +16,10 @@ let ghosts = [];
 //WALL
 const WALL = new Image();
 WALL.src = 'sprites/wall.png';
+
+//CHERRY
+const CHERRY = new Image();
+CHERRY.src = 'sprites/cherry.png';
 
 //PACMAN
 const PACMAN_DOWN = new Image();
@@ -53,15 +60,15 @@ const loadMap = () => {
 ["W","W","W","W","W","W","W","W","W","W","W","W","W","W","W","W","W","W","W","W"],
 ["W",".",".",".",".",".",".",".",".",".",".",".",".",".",".",".",".",".",".","W"],
 ["W",".","W","W",".","W","W","W","W","W","W",".","W","W","W","W","W","W",".","W"],
-["W",".",".",".",".",".",".",".",".",".",".",".",".",".",".",".",".","W",".","W"],
+["W",".","c","c",".",".",".",".",".",".",".",".",".",".",".",".",".","W",".","W"],
 ["W",".","W","W",".","W",".","W","W","W","W","W","W",".",".",".",".","W",".","W"],
-["W",".",".",".",".","W",".",".",".",".",".",".","W",".",".",".",".","W",".","W"],
+["W",".",".",".",".","W","c","c","c","c","c","c","W",".",".",".",".","W",".","W"],
 ["W","W",".",".",".","W","W","W","W",".","W","W","W",".",".","W","W","W",".","W"],
 ["W",".",".",".",".",".",".",".",".",".",".",".",".",".",".",".",".",".",".","W"],
 ["W",".","W","W","W","W",".","W","W","W","W","W","W",".","W","W",".",".",".","W"],
 ["W",".",".",".",".",".",".",".","r","b","p","o",".",".",".",".",".",".",".","W"],
 ["W",".","W","W","W","W",".","W","W","W","W","W",".",".",".",".","W","W","W","W"],
-["W",".",".",".",".","W",".",".",".",".",".",".",".",".",".",".",".",".",".","W"],
+["W",".",".",".","c","W",".","c","c","c","c","c",".",".",".",".",".",".",".","W"],
 ["W",".","W","W","W","W",".","W","W","W","W","W",".",".",".",".","W",".",".","W"],
 ["W",".",".",".",".",".",".",".","W",".",".",".",".",".",".",".","W",".",".","W"],
 ["W",".","W","W",".","W","W","W","W","W","W",".","W","W","W","W","W",".",".","W"],
@@ -69,13 +76,13 @@ const loadMap = () => {
 ["W","W",".","W",".","W",".","W","W","W","W","W","W","W",".",".","W",".",".","W"],
 ["W",".",".",".",".","W",".",".",".",".",".",".",".",".",".",".","W",".",".","W"],
 ["W",".","W","W","W","W","W","W","W",".","W","W",".","W","W","W","W","W",".","W"],
-["W",".",".",".",".",".",".",".",".",".",".",".",".",".",".",".",".",".",".","W"],
+["W",".","c","c","c","c","c","c",".",".",".",".","c","c","c","c","c",".",".","W"],
 ["W","W","W","W","W","W","W","W","W","W","W","W","W","W","W","W","W","W","W","W"]
     ];
 
     map = map1;
 
-    ghosts = []; // reset list
+    ghosts = [];
 
     for (let i = 0; i < map1.length; i++) {
         for (let j = 0; j < map1[i].length; j++) {
@@ -97,7 +104,6 @@ const loadMap = () => {
     }
 
     drawMap(map1);
-    console.log("test");
     
 }
 
@@ -122,14 +128,11 @@ function drawMap(map1){
     ctx.drawImage(pacImg, pacman.x * tileSize, pacman.y * tileSize, tileSize, tileSize);
 
 
-    for (const g of ghosts) {
-        drawGhosts(g);
-    }
+
 }
 
 function drawTile(cell, x, y){
     switch (cell) {
-        //TO_DO Rest of img
         case "W":
             ctx.drawImage(WALL, x, y, tileSize, tileSize);
             break;
@@ -142,29 +145,23 @@ function drawTile(cell, x, y){
         case "r":
             ctx.drawImage(RED_GHOST, x, y, tileSize, tileSize);
             break;
+        case "p":
+            ctx.drawImage(PINK_GHOST, x, y, tileSize, tileSize);
+            break;
         case "s":
             ctx.drawImage(SCARED_GHOST, x, y, tileSize, tileSize);
             break;
+        case "c":
+            ctx.drawImage(CHERRY, x, y, tileSize, tileSize);
+            break;
+        //TODO add cherry
         default:
-            ctx.fillStyle = "black"; 
+            ctx.fillStyle = "black";
             ctx.fillRect(x, y, tileSize, tileSize);
             break;
     }
 }
 
-function drawGhosts(g){
-    let img;
-
-    switch(g.type){
-        case "r": img = RED_GHOST; break;
-        case "b": img = BLUE_GHOST; break;
-        case "p": img = PINK_GHOST; break;
-        case "o": img = ORANGE_GHOST; break;
-        case "s": img = SCARED_GHOST; break;
-    }
-
-    ctx.drawImage(img, g.x * tileSize, g.y * tileSize, tileSize, tileSize);
-}
 
 function move(e){
     let newX = pacman.x;
@@ -187,7 +184,16 @@ function move(e){
         pacman.dir = 'right';
     }
 
-    if (map[newY][newX] !== 'W'){
+    if (!"rbpoW".includes(map[newY][newX])){
+        if (map[newY][newX] === 'c'){
+            cherryCount++;
+            if (cherryCount >= 20){
+                scareGhosts();
+            }
+        }
+        if (map[newY][newX] === 's'){
+            //TODO scaredGhost
+        }
         map[pacman.y][pacman.x] = '.';
         pacman.x = newX;
         pacman.y = newY;
@@ -196,6 +202,13 @@ function move(e){
     drawMap(map);
 }
 
+function scareGhosts(){
+    for (let i = 0; i < map.length; i++) {
+        for (let j = 0; j < map.length; j++) {
+            if ("rbpo".includes(map[i][j])) map[i][j] = 's';
+        }
+    }
+}
 
 
 window.onload = () => {
