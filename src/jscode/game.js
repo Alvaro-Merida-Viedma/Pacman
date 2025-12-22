@@ -3,7 +3,7 @@
 const tileSize = 20;
 let ctx;
 let cherryCount = 0;
-
+let lives = 3;
 let map;
 let pacman = {
     x: 0,
@@ -12,6 +12,7 @@ let pacman = {
 };
 
 let ghosts = [];
+let foodMap = [];
 
 //WALL
 const WALL = new Image();
@@ -82,17 +83,15 @@ const loadMap = () => {
 
     map = map1;
 
-    ghosts = [];
 
     for (let i = 0; i < map1.length; i++) {
+        foodMap[i] = [];
         for (let j = 0; j < map1[i].length; j++) {
             const cell = map1[i][j];
-
             if (cell === "P") {
                 pacman.x = j;
                 pacman.y = i;
             }
-
             else if ("rbpos".includes(cell)) {
                 ghosts.push({
                     x: j,
@@ -100,8 +99,10 @@ const loadMap = () => {
                     type: cell
                 });
             }
+            foodMap[i][j] = (map[i][j] == 'c');
         }
     }
+    
 
     drawMap(map1);
     
@@ -110,11 +111,15 @@ const loadMap = () => {
 
 
 function drawMap(map1){
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
     for (let i = 0; i < map1.length; i++) {
         for (let j = 0; j < map1[i].length; j++) {
             const cell = map1[i][j];
             drawTile(cell, j * tileSize, i * tileSize);
-        }
+            if (foodMap[i][j]) 
+                ctx.drawImage(CHERRY, j * tileSize, i * tileSize, tileSize, tileSize);
+        }   
     }
 
     let pacImg;
@@ -127,7 +132,7 @@ function drawMap(map1){
     }
     ctx.drawImage(pacImg, pacman.x * tileSize, pacman.y * tileSize, tileSize, tileSize);
 
-
+    moveGhosts();
 
 }
 
@@ -151,10 +156,6 @@ function drawTile(cell, x, y){
         case "s":
             ctx.drawImage(SCARED_GHOST, x, y, tileSize, tileSize);
             break;
-        case "c":
-            ctx.drawImage(CHERRY, x, y, tileSize, tileSize);
-            break;
-        //TODO add cherry
         default:
             ctx.fillStyle = "black";
             ctx.fillRect(x, y, tileSize, tileSize);
@@ -187,19 +188,70 @@ function move(e){
     if (!"rbpoW".includes(map[newY][newX])){
         if (map[newY][newX] === 'c'){
             cherryCount++;
+            cherryView();
+            foodMap[newY][newX] = false;
             if (cherryCount >= 20){
                 scareGhosts();
             }
         }
-        if (map[newY][newX] === 's'){
-            //TODO scaredGhost
+        else if (map[newY][newX] === 's'){
+            ghosts = ghosts.filter(g => g.x != newX && g.y != newY);
+            if (ghosts.length == 0){
+                alert('You WIN');
+                window.location.reload();
+            }
         }
         map[pacman.y][pacman.x] = '.';
         pacman.x = newX;
         pacman.y = newY;
         map[pacman.y][pacman.x] = "P";
     }
+    else if (map[newY][newX] != "W"){
+        lives--;
+        livesView()
+        checkLives();
+    }
+    
     drawMap(map);
+}
+
+function moveGhosts() {
+    for (const g of ghosts) {
+        let nX = g.x;
+        let nY = g.y;
+
+        switch(Math.floor(Math.random() * 4)) {
+            case 0: nX = g.x + 1; break;
+            case 1: nY = g.y + 1; break;
+            case 2: nX = g.x - 1; break;
+            case 3: nY = g.y - 1; break;
+        }
+        if (map[nY][nX] === 'P') {
+            if (g.type != 's'){
+                lives--;
+                livesView();
+                checkLives();
+            }
+        }
+        if (!"rbposW".includes(map[nY][nX])) {
+            map[g.y][g.x] = foodMap[g.y][g.x] ? 'c' : '.';
+
+            g.x = nX;
+            g.y = nY;
+
+            map[g.y][g.x] = g.type;
+        }
+    }
+}
+
+
+function checkLives(){
+    if (lives <= 0) gameOver();
+}
+
+function gameOver(){
+    alert('Has perdido');
+    window.location.reload();
 }
 
 function scareGhosts(){
@@ -208,10 +260,36 @@ function scareGhosts(){
             if ("rbpo".includes(map[i][j])) map[i][j] = 's';
         }
     }
+    for (const g of ghosts) {
+        g.type = "s";
+    }
+}
+
+function livesView(){
+    let div = document.getElementById('lives');
+    div.textContent = "Numero de vidas: "+lives;
+}
+
+function cherryView(){
+    let div = document.getElementById('cherry');
+    div.textContent = "Numero de cherrys: "+cherryCount;
 }
 
 
 window.onload = () => {
+    let livesDiv = document.createElement('div');
+    livesDiv.id = 'lives';
+    livesDiv.textContent = "Numero de vidas: "+lives;
+
+    let cherrysDiv = document.createElement('div');
+    cherrysDiv.id = 'cherry';
+    cherrysDiv.textContent = "Numero de cherrys: "+cherryCount;
+
+
+    let container = document.querySelector('div')
+    container.appendChild(livesDiv);
+    container.appendChild(cherrysDiv)
     loadMap();
     document.addEventListener('keydown', move);
+    livesView();
 };
