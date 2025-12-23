@@ -14,6 +14,8 @@ let pacman = {
 let ghosts = [];
 let foodMap = [];
 
+let GHOST_MOVES = 0;
+
 //WALL
 const WALL = new Image();
 WALL.src = 'sprites/wall.png';
@@ -105,6 +107,7 @@ const loadMap = () => {
     
 
     drawMap(map1);
+    GHOST_MOVES = setInterval(moveGhosts, 400);
     
 }
 
@@ -131,8 +134,6 @@ function drawMap(map1){
         case "right": pacImg = PACMAN_RIGHT; break;
     }
     ctx.drawImage(pacImg, pacman.x * tileSize, pacman.y * tileSize, tileSize, tileSize);
-
-    moveGhosts();
 
 }
 
@@ -242,6 +243,7 @@ function moveGhosts() {
             map[g.y][g.x] = g.type;
         }
     }
+    drawMap(map);
 }
 
 
@@ -250,6 +252,7 @@ function checkLives(){
 }
 
 function gameOver(){
+    clearInterval(GHOST_MOVES);
     alert('Has perdido');
     window.location.reload();
 }
@@ -275,8 +278,7 @@ function cherryView(){
     div.textContent = "Numero de cherrys: "+cherryCount;
 }
 
-
-window.onload = () => {
+function setDivs(){
     let livesDiv = document.createElement('div');
     livesDiv.id = 'lives';
     livesDiv.textContent = "Numero de vidas: "+lives;
@@ -286,10 +288,14 @@ window.onload = () => {
     cherrysDiv.textContent = "Numero de cherrys: "+cherryCount;
 
 
-    let container = document.querySelector('div')
+    let container = document.querySelector('.scores')
     container.appendChild(livesDiv);
     container.appendChild(cherrysDiv)
+}
+
+window.onload = () => {
+    setDivs();
     loadMap();
+    
     document.addEventListener('keydown', move);
-    livesView();
 };
