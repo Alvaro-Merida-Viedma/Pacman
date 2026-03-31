@@ -198,8 +198,7 @@ function move(e){
         else if (map[newY][newX] === 's'){
             ghosts = ghosts.filter(g => g.x != newX && g.y != newY);
             if (ghosts.length == 0){
-                alert('You WIN');
-                window.location.reload();
+                winner();
             }
         }
         map[pacman.y][pacman.x] = '.';
@@ -253,8 +252,62 @@ function checkLives(){
 
 function gameOver(){
     clearInterval(GHOST_MOVES);
-    alert('Has perdido');
-    window.location.reload();
+    if (document.getElementById("win-lose-Box")) return;
+    // Crear overlay
+    const LoseBox = document.createElement("div");
+    LoseBox.id = "win-lose-Box";
+
+    // Contenedor
+    const content = document.createElement("div");
+    content.className = "win-lose-content";
+
+    // Texto
+    const text = document.createElement("h1");
+    text.textContent = "¡HAS PERDIDO!";
+
+    // Botón
+    const button = document.createElement("button");
+    button.textContent = "Reiniciar";
+
+    button.addEventListener("click", () => {
+        location.reload();
+    });
+
+    // Montar estructura
+    content.appendChild(text);
+    content.appendChild(button);
+    LoseBox.appendChild(content);
+    document.body.appendChild(LoseBox);
+}
+
+function winner(){
+    if (document.getElementById("win-lose-Box")) return;
+    clearInterval(GHOST_MOVES);
+    // Crear overlay
+    const winBox = document.createElement("div");
+    winBox.id = "win-lose-Box";
+
+    // Contenedor
+    const content = document.createElement("div");
+    content.className = "win-lose-content";
+
+    // Texto
+    const text = document.createElement("h1");
+    text.textContent = "¡HAS GANADO!";
+
+    // Botón
+    const button = document.createElement("button");
+    button.textContent = "Reiniciar";
+
+    button.addEventListener("click", () => {
+        location.reload();
+    });
+
+    // Montar estructura
+    content.appendChild(text);
+    content.appendChild(button);
+    winBox.appendChild(content);
+    document.body.appendChild(winBox);
 }
 
 function scareGhosts(){
